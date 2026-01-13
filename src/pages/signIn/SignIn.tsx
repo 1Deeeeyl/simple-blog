@@ -1,9 +1,11 @@
 import { useState } from "react";
 import supabase from "../../utils/supabase";
+import { useNavigate } from "react-router-dom";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -19,6 +21,7 @@ export default function SignIn() {
     }
 
     console.log("User signed in:", data);
+    navigate("/", { replace: true });
   };
 
   return (
@@ -40,7 +43,7 @@ export default function SignIn() {
           className="border-2 border-gray-700 focus:border-pink-600 focus:outline-none rounded-md"
         />
 
-        <button type="submit">Sign Up</button>
+        <button type="submit">Sign In</button>
       </form>
     </div>
   );

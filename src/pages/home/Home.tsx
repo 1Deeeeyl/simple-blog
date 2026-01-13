@@ -23,10 +23,24 @@ export default function Home() {
     checkAuth();
   }, []);
 
+  async function handleSignOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error(error.message);
+      return;
+    }
+
+    setUser(null);
+  }
+
   return (
-    <div>
-      <Navbar />
+    <div className="flex flex-col justify-center items-center">
+      <Navbar isAuthenticated={!!user} onSignOut={handleSignOut} />
       {!user ? <Unauthenticated /> : <Authenticated />}
     </div>
   );
 }
+
+
+
+// conditional rendering done for nav, next step is redux
