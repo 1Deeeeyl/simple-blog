@@ -1,11 +1,14 @@
 import { useState } from "react";
 import supabase from "../../utils/supabase";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../features/auth/authSlice";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const dispatch = useDispatch(); 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,7 +23,12 @@ export default function SignUp() {
       return;
     }
 
-    console.log("User signed up:", data);
+    //update redux on user state
+    if (data.user) {
+      dispatch(setUser(data.user));
+    }
+
+    //go to home after successful sign up
     navigate("/", { replace: true });
   };
 

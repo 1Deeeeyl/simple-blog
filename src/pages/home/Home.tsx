@@ -1,38 +1,51 @@
-import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../../store";
 import supabase from "../../utils/supabase";
-import type { User } from "@supabase/supabase-js";
 import Unauthenticated from "./unauthenticated/Unauthenticated";
 import Authenticated from "./authenticated/Authenticated";
 import Navbar from "../../components/navbar/Navbar";
+import { clearUser, setUser } from "../../features/auth/authSlice";
+import { useEffect } from "react";
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    async function checkAuth() {
-      const { data, error } = await supabase.auth.getSession();
 
+    //to check if signed in
+    async function checkSession() {
+      const { data, error } = await supabase.auth.getSession();
       if (error) {
         console.error(error.message);
         return;
       }
-
-      setUser(data.session?.user ?? null);
+      dispatch(setUser(data.session?.user ?? null));
     }
 
-    checkAuth();
-  }, []);
+    checkSession();
 
-  async function handleSignOut() {
+    // authchanges to update ui realtime
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        dispatch(setUser(session?.user ?? null));
+      }
+    );
+
+    //unmount for optimization
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [dispatch]);
+
+  const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error(error.message);
       return;
     }
-
-    setUser(null);
-  }
-
+    dispatch(clearUser());
+  };
   return (
     <div className="flex flex-col justify-center items-center">
       <Navbar isAuthenticated={!!user} onSignOut={handleSignOut} />
@@ -40,7 +53,3 @@ export default function Home() {
     </div>
   );
 }
-
-
-
-// conditional rendering done for nav, next step is redux

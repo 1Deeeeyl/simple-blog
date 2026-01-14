@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 
 type ButtonProps = {
   children: ReactNode;
-  to?: string;          // if present → Link
-  onClick?: () => void; // if present → button action
+  to?: string;          
+  onClick?: () => void; 
   variant?: "primary" | "danger";
 };
 
@@ -24,7 +24,7 @@ export default function Button({
 
   const className = `${baseStyles} ${variantStyles}`;
 
-  // If `to` exists → navigation button
+  
   if (to) {
     return (
       <Link to={to} className={className}>
@@ -33,7 +33,7 @@ export default function Button({
     );
   }
 
-  // Otherwise → normal button
+ 
   return (
     <button className={className} onClick={onClick}>
       {children}

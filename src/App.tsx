@@ -18,5 +18,3 @@ function App() {
 
 export default App;
 
-// try supabase create table and display data
-// setup redux
