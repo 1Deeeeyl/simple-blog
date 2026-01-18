@@ -5,9 +5,6 @@ import supabase from "../../utils/supabase";
 import { Link } from "react-router-dom";
 import Button from "../../components/buttons/Button";
 
-import Unauthenticated from "./unauthenticated/Unauthenticated";
-import Authenticated from "./authenticated/Authenticated";
-
 type Blog = {
   id: string;
   created_at: string;
@@ -15,18 +12,19 @@ type Blog = {
   author_id: string;
   title: string;
   content: string;
-  author: string;
 };
 
-export default function Home() {
+export default function YourBlogs() {
   const user = useSelector((state: RootState) => state.auth.user);
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
+  const PAGE_SIZE = 5;
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const PAGE_SIZE = 5;
 
   useEffect(() => {
+    if (!user) return;
+
     async function fetchBlogs() {
       setLoading(true);
 
@@ -36,6 +34,7 @@ export default function Home() {
       const { data, error } = await supabase
         .from("blogs")
         .select("*")
+        .eq("author_id", user?.id)
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -51,13 +50,37 @@ export default function Home() {
     }
 
     fetchBlogs();
-  }, [page]);
+  }, [user, page]);
+
+  const handleDelete = async (blogId: string, blogTitle: string) => {
+    if (!user) return;
+
+    const confirmed = confirm(`Delete "${blogTitle}"? This cannot be undone.`);
+
+    if (!confirmed) return; 
+
+    const { error } = await supabase
+      .from("blogs")
+      .delete()
+      .eq("id", blogId)
+      .eq("author_id", user.id);
+
+    if (error) {
+      console.error("Error deleting blog:", error.message);
+      return;
+    }
+
+    
+    setBlogs((prev) => prev.filter((blog) => blog.id !== blogId));
+  };
+
+  if (!user) {
+    return <p className="mt-8">You must be signed in to view your blogs.</p>;
+  }
 
   return (
-    <div className="flex flex-col justify-center items-center gap-4 px-4">
-      {!user ? <Unauthenticated /> : <Authenticated />}
-
-      <h2 className="text-2xl font-bold mt-8">All Blogs</h2>
+    <div className="flex flex-col items-center gap-4">
+      <h2 className="text-2xl font-bold mt-8">Your Blogs</h2>
 
       {loading && (
         <div className="flex flex-col justify-center items-center gap-4 ">
@@ -65,10 +88,10 @@ export default function Home() {
         </div>
       )}
 
-      {!loading && blogs.length === 0 ? (
-        <p>No blogs yet.</p>
-      ) : (
-        <ul className="flex flex-col gap-4 mt-4 w-full max-w-xl">
+      {!loading && blogs.length === 0 && <p>No blogs yet.</p>}
+
+      {!loading && blogs.length > 0 && (
+        <ul className="flex flex-col gap-4 mt-4 w-full max-w-xl px-4">
           {blogs.map((blog) => (
             <li
               key={blog.id}
@@ -80,14 +103,24 @@ export default function Home() {
                     {blog.title}
                   </h3>
                 </Link>
-                <span className="text-gray-600 text-sm">by {blog.author}</span>
+
+                <div className="flex gap-2">
+                  <Button to={`/yourblogs/${blog.id}/edit`}>Edit</Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => handleDelete(blog.id, blog.title)}
+                  >
+                    Delete
+                  </Button>
+                </div>
               </div>
 
-              <p className="text-gray-800">
+              <p className="text-gray-800 mt-2">
                 {blog.content.length > 100
-                  ? blog.content.substring(0, 100) + "..."
+                  ? blog.content.slice(0, 100) + "..."
                   : blog.content}
               </p>
+
               <span className="flex flex-col gap-2 md:gap-4 md:flex-row pt-4">
                 <small className="text-gray-500">
                   Created at: {new Date(blog.created_at).toLocaleString()}
