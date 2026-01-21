@@ -17,7 +17,7 @@ export default function Button({
   disabled = false,
 }: ButtonProps) {
   const baseStyles =
-    "p-1.5 rounded-md font-medium text-white inline-flex items-center justify-center h-fit w-fit";
+    "p-2.5 rounded-md font-medium text-white inline-flex items-center justify-center h-fit w-fit";
 
   const variantMap: Record<string, string> = {
     danger: "bg-red-600 hover:bg-red-700",

@@ -14,6 +14,7 @@ type Blog = {
   title: string;
   content: string;
   author: string;
+  image_url: string;
 };
 
 type Comments = {
@@ -104,25 +105,21 @@ export default function BlogPage() {
 
     let imageUrl: string | null = null;
 
-    
     if (imageFile) {
       const fileExt = imageFile.name.split(".").pop();
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = `comment-images/${id}/${fileName}`;
 
-      
-
-      const {  error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("comment-images")
         .upload(filePath, imageFile);
 
       if (uploadError) {
-        console.error("Upload error:", uploadError); 
+        console.error("Upload error:", uploadError);
         setError(`Failed to upload image: ${uploadError.message}`);
         setLoading(false);
         return;
       }
-
 
       const { data } = supabase.storage
         .from("comment-images")
@@ -154,11 +151,11 @@ export default function BlogPage() {
     setCommentText("");
 
     if (data && data.length > 0) {
-      setComments((prev) => [data[0], ...prev]); 
+      setComments((prev) => [data[0], ...prev]);
       setCommentText("");
       setImageFile(null);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""; 
+        fileInputRef.current.value = "";
       }
     }
   };
@@ -166,6 +163,16 @@ export default function BlogPage() {
   return (
     <div className="max-w-2xl mx-auto p-4">
       <section>
+        {blog.image_url && (
+          <div className="w-full flex justify-center">
+            {" "}
+            <img
+              src={blog.image_url}
+              alt={`${blog.author}'s blog picture.`}
+              className="mb-5 w-fit max-h-60 rounded"
+            />
+          </div>
+        )}
         <h1 className="text-3xl font-bold mb-2">{blog.title}</h1>
         <small className="text-gray-500">
           By {blog.author} | Created at:{" "}
@@ -174,7 +181,6 @@ export default function BlogPage() {
             ? "| Last updated: " + new Date(blog.created_at).toLocaleString()
             : ""}
         </small>
-
         <p className="mt-4 text-gray-800">{blog.content}</p>
       </section>
       <section className="mt-20">
